@@ -1,6 +1,4 @@
-from datetime import datetime
 from typing import ClassVar, Any
-
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
@@ -10,13 +8,12 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 
-
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifier
     for authentication instead of usernames.
     """
-    def create_user(self, email:str, password:str, **extra_fields:Any)->'User':
+    def create_user(self, email:str, password:str=None, **extra_fields:Any)->'User':
         """
         Create and save a User with the given email and password.
         """
@@ -28,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email:str, password:str, **extra_fields:Any)->'User':
+    def create_superuser(self, email:str, password:str=None, **extra_fields:Any)->'User':
         """
         Create and save a SuperUser with the given email and password.
         """
@@ -41,7 +38,6 @@ class CustomUserManager(BaseUserManager):
         if not extra_fields.get('is_superuser'):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **extra_fields)
-
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -84,35 +80,37 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-# TODO: Complete the Passenger model implementation
 class Passenger(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='passenger_profile')
     passenger_id = models.CharField(max_length=10, unique=True)
     preferred_payment_method = models.CharField(max_length=10, default='momo')
     home_address = models.TextField(max_length=100)
 
-
     def __str__(self):
         return f"Passenger: {self.user.email}"
-
 
     def clean(self):
         if self.user.user_type != 'passenger':
             raise ValidationError('User is not a passenger')
-
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
 
-#  TODO: Complete the Rider model implementation
 class Rider(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='rider_profile')
+    # Additional rider fields can be added here
+    license_number = models.CharField(max_length=20, blank=True, null=True)
+    vehicle_registration = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return f"Rider: {self.user.email}"
 
+    def clean(self):
+        if self.user.user_type != 'rider':
+            raise ValidationError('User is not a rider')
 
-
-
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
