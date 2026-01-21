@@ -87,6 +87,21 @@ DATABASES = {
 }
 
 
+#settting Redis for high-performance caching
+# Redis container running via Docker on localhost:6379
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'TIMEOUT': 300,  # Default cache timeout: 5 minutes
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Cache timeout setting (used throughout the application)
+CACHE_TTL = 60 * 5  # 5 minutes (300 seconds)
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
